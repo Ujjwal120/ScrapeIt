@@ -27,7 +27,7 @@ app.post("/startPupeteer", async (req, res, next) => {
 const headLessBrowser = async (uname, pass) => {
     const browser = await puppeteer.launch({
         headless: false,
-        slowMo: 120, // slow down by 250ms
+        slowMo: 70, // slow down by 250ms
     });
 
     const page = await browser.newPage();
@@ -39,8 +39,18 @@ const headLessBrowser = async (uname, pass) => {
     await fillInput(page, 'password', pass);
     
     const loginButton = await page.$('button.sqdOP.L3NKy.y3zKF');
+    await loginButton.click();
 
-    loginButton.click();
+    await page.waitForSelector('.q9xVd', {visible : true});
+    const homeDiv = await page.$('div.q9xVd');
+    const homeButton = await homeDiv.$('a');
+    await homeButton.click();
+
+    await page.waitForSelector('.aOOlW.HoLwm', {visible : true});
+    const notNowButton = await page.$('button.aOOlW.HoLwm');
+    await notNowButton.click();
+    
+    // browser can be closed just by un-commenting the line below
     // await browser.close();   
 }
 
@@ -50,7 +60,7 @@ const headLessBrowser = async (uname, pass) => {
  * @param  {string} value
  */
 const fillInput = async (page, fieldName, value) => {
-    await page.waitForSelector(`input[name=${fieldName}]`);
+    await page.waitForSelector(`input[name=${fieldName}]`, {visible : true});
 
     const usernameInput = await page.$(`input[name=${fieldName}]`);
 

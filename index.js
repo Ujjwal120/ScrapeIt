@@ -19,6 +19,11 @@ app.post("/startPupeteer", async (req, res, next) => {
     return res.status(200).send();
 })
 
+
+/**
+ * @param  {string} uname
+ * @param  {string} pass
+ */
 const headLessBrowser = async (uname, pass) => {
     const browser = await puppeteer.launch({
         headless: false,
@@ -33,9 +38,17 @@ const headLessBrowser = async (uname, pass) => {
     await fillInput(page, 'username', uname);
     await fillInput(page, 'password', pass);
     
-    // await browser.close();
+    const loginButton = await page.$('button.sqdOP.L3NKy.y3zKF');
+
+    loginButton.click();
+    // await browser.close();   
 }
 
+/**
+ * @param  {Page} page
+ * @param  {string} fieldName
+ * @param  {string} value
+ */
 const fillInput = async (page, fieldName, value) => {
     await page.waitForSelector(`input[name=${fieldName}]`);
 

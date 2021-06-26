@@ -4,7 +4,6 @@ const request = require('./networkInterceptor');
 /**
  * @param  {string} uname
  * @param  {string} pass
- * @param  {Array} results
  */
  module.exports.headLessBrowser = async (uname, pass) => {
     const browser = await puppeteer.launch({
@@ -20,8 +19,13 @@ const request = require('./networkInterceptor');
     await fillInput(page, 'username', uname);
     await fillInput(page, 'password', pass);
     
-    let results = {};
-    await request.networkInterceptor(page, results);
+    let activeStoriesUserInfo = {
+        data : [],
+    };
+    let unseenStoriesData = {
+        data : [],
+    };
+    await request.networkInterceptor(page, activeStoriesUserInfo);
 
     const loginButton = await page.$('button.sqdOP.L3NKy.y3zKF');
     await loginButton.click();
@@ -35,13 +39,14 @@ const request = require('./networkInterceptor');
     const notNowButton = await page.$('button.aOOlW.HoLwm');
     await notNowButton.click();
     
+    if(activeStoriesUserInfo.data.length === 0 || activeStoriesUserInfo.data[0].items === undefined)
+        return [null, null, null, null];
+    
     await page.waitForSelector('._6q-tv', {visible : true});
     const img = await page.$('img._6q-tv');
-
-    // await img.click();
-    console.log(results.data);
-
-    return [page, browser, results];
+    await img.click();
+    
+    return [page, browser, activeStoriesUserInfo, unseenStoriesData];
 }
 
 /**

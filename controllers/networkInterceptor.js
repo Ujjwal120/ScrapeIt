@@ -1,24 +1,31 @@
 /**
  * @param  {Page} page
- * @param  {Array} results
+ * @param  {Array} activeStoriesUserInfo
  */
-module.exports.networkInterceptor = async(page, results) => {
-    console.log("CALLED");
+module.exports.networkInterceptor = async(page, activeStoriesUserInfo) => {
 
     await page.setRequestInterception(true);
 
     page.on('request', request => {
-        request.continue();
+        return Promise.resolve().then(() => request.continue()).catch(e => {});
     });
 
     page.on('requestfinished', async (request) => {
         const response = await request.response();
 
-        if(request.url().includes("reels_tray") && request.resourceType() === 'xhr') {
+        // this is required for saving contents of first story
+        if(request.resourceType() === 'xhr' && 
+            request.url().includes("reels_tray") && 
+            !request.url().includes("reels_tray_broadcast")) {
             const data = await response.json();
             if(data.tray !== undefined) {
-                results.data = data.tray;
+                activeStoriesUserInfo.data = [...activeStoriesUserInfo.data, ...data.tray];
             }
+        }
+
+        if(request.resourceType() === 'xhr' && request.url().includes("reel_ids")) {
+            const data = await response.json();
+            console.log(data.reels_media);
         }
     });
 

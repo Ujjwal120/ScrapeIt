@@ -19,13 +19,12 @@ const request = require('./networkInterceptor');
     await fillInput(page, 'username', uname);
     await fillInput(page, 'password', pass);
     
-    let activeStoriesUserInfo = {
-        data : [],
-    };
     let unseenStoriesData = {
         data : [],
+        users : [],
     };
-    await request.networkInterceptor(page, activeStoriesUserInfo);
+    
+    await request.networkInterceptor(page, unseenStoriesData);
 
     const loginButton = await page.$('button.sqdOP.L3NKy.y3zKF');
     await loginButton.click();
@@ -39,14 +38,14 @@ const request = require('./networkInterceptor');
     const notNowButton = await page.$('button.aOOlW.HoLwm');
     await notNowButton.click();
     
-    if(activeStoriesUserInfo.data.length === 0 || activeStoriesUserInfo.data[0].items === undefined)
+    if(unseenStoriesData.data.length === 0)
         return [null, null, null, null];
     
     await page.waitForSelector('._6q-tv', {visible : true});
     const img = await page.$('img._6q-tv');
     await img.click();
     
-    return [page, browser, activeStoriesUserInfo, unseenStoriesData];
+    return [page, browser, unseenStoriesData];
 }
 
 /**

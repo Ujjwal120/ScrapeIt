@@ -9,6 +9,7 @@ const request = require('./networkInterceptor');
     const browser = await puppeteer.launch({
         // headless: false,   // remove this to not launch Chrommium
         slowMo: 20, // slow down by 250ms
+        args:['--no-sandbox']
     });
 
     const page = await browser.newPage();

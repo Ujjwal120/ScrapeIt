@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Browser = require("./../controllers/headlessBrowser");
-const PuppeteerNetworkMonitor = require('../controllers/PuppeteerNetwork');
 
 const { MongoClient } = require('mongodb');
 const uri = "mongodb+srv://ujju120:Ujjun@120@cluster0.hd1pv.mongodb.net/scrapeInsta?retryWrites=true&w=majority";
@@ -11,16 +10,24 @@ router.post("/startPupeteer", async (req, res, next) => {
     const [
         page, 
         browser, 
-        unseenStoriesData
+        unseenStoriesData,
+        MonitorRequests
     ] = await Browser
         .headLessBrowser(req.body.username, req.body.password);
     
+    if(!MonitorRequests.loginSuccess) {
+        // close the browser
+        await browser.close();
+        return res.status(200).send("Wrong Password / Username !!");
+    }
+
     if(page === null) {
+        // close the browser
+        await browser.close();
         return res.status(200).send("No more new stories !!");
     }
 
-    let monitorRequests = new PuppeteerNetworkMonitor(page);
-    await monitorRequests.waitForAllRequests();
+    await MonitorRequests.waitForAllRequests();
 
     await page.waitForSelector('.QBdPU', {visible : true});
     await page.waitForSelector('.coreSpriteRightChevron', {visible : true});
@@ -37,7 +44,7 @@ router.post("/startPupeteer", async (req, res, next) => {
         const rightButtonDiv = await page.$('div.coreSpriteRightChevron');
         await rightButtonDiv.click();
 
-        await monitorRequests.waitForAllRequests();
+        await MonitorRequests.waitForAllRequests();
 
         cancelButton = await page.evaluate(() => {
             return document.querySelector('.QBdPU');
@@ -47,6 +54,8 @@ router.post("/startPupeteer", async (req, res, next) => {
             return document.querySelector('.coreSpriteRightChevron');
         });
     }
+
+    await MonitorRequests.waitForAllRequests();
 
     const client = new MongoClient(uri, { useUnifiedTopology: true });
 

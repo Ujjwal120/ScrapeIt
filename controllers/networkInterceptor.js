@@ -2,30 +2,50 @@
  * @param  {Page} page
  * @param  {Array} activeStoriesUserInfo
  */
-module.exports.networkInterceptor = async(page, unseenStoriesData) => {
+module.exports.networkInterceptor = async(page, unseenStoriesData, MonitorRequests) => {
 
     await page.setRequestInterception(true);
 
     page.on('request', request => {
+
+        if (MonitorRequests.resourceType.includes(request.resourceType())) {
+            MonitorRequests.pendingRequests.add(request);
+            MonitorRequests.promises.push(
+                new Promise(resolve => {
+                    request.resolver = resolve;
+                }),
+            );
+        }
+
         return Promise.resolve().then(() => request.continue()).catch(e => {});
     });
 
     page.on('requestfinished', async (request) => {
+
+        if (MonitorRequests.resourceType.includes( request.resourceType())) {
+            MonitorRequests.pendingRequests.delete(request);
+            if (request.resolver) {
+                request.resolver();
+                delete request.resolver;
+            }
+        }
+
         const response = await request.response();
 
         // this is required for saving contents of first story
         if(request.resourceType() === 'xhr' && 
-            request.url().includes("reels_tray") && 
-            !request.url().includes("reels_tray_broadcast")) {
+            request.url().includes("reels_tray/")) {
             
             const data = await response.json();
-            if(data.tray[0].items !== undefined && 
-                data.tray[0].seen === 0) 
-                
+            if(data.tray[0].seen === 0) {
                 unseenStoriesData.users.push(data.tray[0].user);
                 unseenStoriesData.data = [...unseenStoriesData.data, ...data.tray[0].items];
+            }
         }
 
+        // this does the job to get unseen stories only, 
+        // as Intsagram uses pagination to fetch next group
+        // of stories
         if(request.resourceType() === 'xhr' && 
             request.url().includes("reel_ids")) {
             
@@ -37,11 +57,27 @@ module.exports.networkInterceptor = async(page, unseenStoriesData) => {
                 }
             }
         }
+
+        if(request.resourceType() === 'xhr' && 
+            request.url().includes("login/ajax")) {
+            
+            const data = await response.json().catch((e) => {});
+            
+            if(data !== undefined && !data.authenticated) {
+                MonitorRequests.loginSuccess = false;
+            }
+        }
     });
 
     page.on('requestfailed', (request) => {
         // handle failed request
-        console.log(request.url().substr(0, 20), ' Request Failed !');
+        if (MonitorRequests.resourceType.includes(request.resourceType())) {
+            MonitorRequests.pendingRequests.delete(request);
+            if (request.resolver) {
+                request.resolver();
+                delete request.resolver;
+            }
+        }
     });
 
 }

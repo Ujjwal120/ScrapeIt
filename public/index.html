@@ -59,10 +59,10 @@
     <!--  username and password -->
     <form action="/ScrapeIt/startPupeteer" enctype="application/x-www-form-urlencoded" method="POST"> 
         <label for = "first" >USERNAME</label>
-        <input id = "first" type="text" name="username" />
+        <input id = "first" type="text" name="username" required />
         
         <label for = "second" >PASSWORD</label>
-        <input id = "second" type="password" name="password" />
+        <input id = "second" type="password" name="password" required minlength="6"/>
         <div>
             <button type="submit"> 
                 Scrape Stories

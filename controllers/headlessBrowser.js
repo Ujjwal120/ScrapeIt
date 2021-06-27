@@ -23,11 +23,37 @@ const request = require('./networkInterceptor');
         data : [],
         users : [],
     };
-    
-    await request.networkInterceptor(page, unseenStoriesData);
+
+    let MonitorRequests = {
+        loginSuccess : true,
+        resourceType : ['xhr'],
+        pendingRequests : new Set(),
+        promises : [],
+        waitForAllRequests : async function() {
+            if (this.pendingRequestCount() === 0) {
+                return;
+            }
+            await Promise.all(this.promises);
+        },
+        pendingRequestCount : function () {
+            return this.pendingRequests.size;
+        }
+    }
+   
+    await request.networkInterceptor(page, unseenStoriesData, MonitorRequests);
 
     const loginButton = await page.$('button.sqdOP.L3NKy.y3zKF');
     await loginButton.click();
+
+    await page.waitForResponse(response => {
+        return (response.request().resourceType() === 'xhr') && 
+            (response.request().url().includes('/logging/falco'));
+    });
+    
+
+    if(!MonitorRequests.loginSuccess) {
+        return [null, null, null, MonitorRequests];
+    }
 
     await page.waitForSelector('.q9xVd', {visible : true});
     const homeDiv = await page.$('div.q9xVd');
@@ -38,14 +64,15 @@ const request = require('./networkInterceptor');
     const notNowButton = await page.$('button.aOOlW.HoLwm');
     await notNowButton.click();
     
-    if(unseenStoriesData.data.length === 0)
-        return [null, null, null, null];
+    if(unseenStoriesData.data.length === 0) {
+        return [null, null, null, MonitorRequests];
+    }
     
     await page.waitForSelector('._6q-tv', {visible : true});
     const img = await page.$('img._6q-tv');
     await img.click();
     
-    return [page, browser, unseenStoriesData];
+    return [page, browser, unseenStoriesData, MonitorRequests];
 }
 
 /**

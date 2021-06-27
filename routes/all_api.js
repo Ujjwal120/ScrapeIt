@@ -18,19 +18,13 @@ router.post("/startPupeteer", async (req, res, next) => {
     if(!MonitorRequests.loginSuccess) {
         // close the browser
         await browser.close();
+        
+        await client.close();
+        
         return res.status(200).send("Wrong Password / Username !!");
     }
 
-    if(page === null) {
-        // close the browser
-        await browser.close();
-        return res.status(200).send("No more new stories !!");
-    }
-
     await MonitorRequests.waitForAllRequests();
-
-    await page.waitForSelector('.QBdPU', {visible : true});
-    await page.waitForSelector('.coreSpriteRightChevron', {visible : true});
 
     let cancelButton = await page.evaluate(() => {
         return document.querySelector('.QBdPU');
@@ -41,6 +35,10 @@ router.post("/startPupeteer", async (req, res, next) => {
     });
 
     while(RightButtonPresent !== null && cancelButton !== null) {
+        
+        await page.waitForSelector('.QBdPU', {visible : true});
+        await page.waitForSelector('.coreSpriteRightChevron', {visible : true});
+
         const rightButtonDiv = await page.$('div.coreSpriteRightChevron');
         await rightButtonDiv.click();
 
@@ -63,35 +61,58 @@ router.post("/startPupeteer", async (req, res, next) => {
         await client.connect();
         const db = client.db('scrapeInsta');
        
-        // insert stories all together
-        await db.collection('stories')
-          .insertMany(unseenStoriesData.data);
+        // insert stories 
+        let stories = [];
+        for(let i = 0; i < unseenStoriesData.data.length; i++) {
+            const cursor = await db.collection('stories').findOne({ 
+                id : unseenStoriesData.data[i].id
+            });
+
+            if(cursor === null) {
+                stories.push(unseenStoriesData.data[i]);
+                await db.collection('stories')
+                 .insertOne(unseenStoriesData.data[i]);
+            }
+        }
+
+        // const db_cursor = await db.collection('stories').find();
+        
+        // let db_stories = [];
+
+        // await db_cursor.forEach((doc) => {
+        //     db_stories.push(doc);
+        // })
 
         // insert new users if any
         for(let i = 0; i < unseenStoriesData.users.length; i++) {
-            const cursor = db.collection('users').findOne({ 
+            const cursor = await db.collection('users').findOne({ 
                 pk : unseenStoriesData.users[i].pk
             });
 
-            if(cursor !== null) {
+            if(cursor === null) {
                 await db.collection('users')
                  .insertOne(unseenStoriesData.users[i]);
             }
         }
+
+        // close the browser here
+        await browser.close();
+
+        await client.close();
+
+        return res.status(200).json(stories);
     }
     catch(err) {
-        console.log(error);
-    }
-    finally {
-        await client.close();
-    }
+        // close the browser here
+        await browser.close();
 
-    // close the browser here
-    await browser.close();
+        await client.close();
+
+        res.status(400).send({
+            message : err
+        })
+    }
     
-    return res.status(200).send({
-        data : unseenStoriesData.data,
-    }).json();
 })
 
 module.exports = router;

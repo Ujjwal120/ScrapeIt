@@ -37,10 +37,8 @@ module.exports.networkInterceptor = async(page, unseenStoriesData, MonitorReques
             request.url().includes("reels_tray/")) {
             
             const data = await response.json();
-            if(data.tray[0].seen === 0) {
-                unseenStoriesData.users.push(data.tray[0].user);
-                unseenStoriesData.data = [...unseenStoriesData.data, ...data.tray[0].items];
-            }
+            unseenStoriesData.users.push(data.tray[0].user);    
+            unseenStoriesData.data = [...unseenStoriesData.data, ...data.tray[0].items];
         }
 
         // this does the job to get unseen stories only, 

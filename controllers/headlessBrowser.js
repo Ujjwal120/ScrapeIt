@@ -7,8 +7,8 @@ const request = require('./networkInterceptor');
  */
  module.exports.headLessBrowser = async (uname, pass) => {
     const browser = await puppeteer.launch({
-        headless: false,   // remove this to not launch Chrommium
-        slowMo: 35, // slow down by 250ms
+        // headless: false,   // remove this to not launch Chrommium
+        slowMo: 20, // slow down by 250ms
     });
 
     const page = await browser.newPage();
@@ -52,7 +52,7 @@ const request = require('./networkInterceptor');
     
 
     if(!MonitorRequests.loginSuccess) {
-        return [null, null, null, MonitorRequests];
+        return [page, browser, unseenStoriesData, MonitorRequests];
     }
 
     await page.waitForSelector('.q9xVd', {visible : true});
@@ -60,13 +60,12 @@ const request = require('./networkInterceptor');
     const homeButton = await homeDiv.$('a');
     await homeButton.click();
 
-    await page.waitForSelector('.aOOlW.HoLwm', {visible : true});
-    const notNowButton = await page.$('button.aOOlW.HoLwm');
-    await notNowButton.click();
-    
-    if(unseenStoriesData.data.length === 0) {
-        return [null, null, null, MonitorRequests];
-    }
+    /*
+        un-comment the 3 lines below in case using {headless : false}
+    */
+    // await page.waitForSelector('.aOOlW.HoLwm', {visible : true});
+    // const notNowButton = await page.$('button.aOOlW.HoLwm');
+    // await notNowButton.click();
     
     await page.waitForSelector('._6q-tv', {visible : true});
     const img = await page.$('img._6q-tv');

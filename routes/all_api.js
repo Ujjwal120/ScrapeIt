@@ -19,8 +19,6 @@ router.post("/startPupeteer", async (req, res, next) => {
         return res.status(200).send("No more new stories !!");
     }
 
-    // class of cross button .QBdPU 
-
     let monitorRequests = new PuppeteerNetworkMonitor(page);
     await monitorRequests.waitForAllRequests();
 
@@ -50,16 +48,13 @@ router.post("/startPupeteer", async (req, res, next) => {
         });
     }
 
-    // console.log(unseenStoriesData.data);
-    console.log('sadsadsda', unseenStoriesData.data.length);
-
     const client = new MongoClient(uri, { useUnifiedTopology: true });
 
     try {
         await client.connect();
         const db = client.db('scrapeInsta');
        
-        // insert stories
+        // insert stories all together
         await db.collection('stories')
           .insertMany(unseenStoriesData.data);
 

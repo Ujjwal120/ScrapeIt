@@ -7,8 +7,8 @@ const request = require('./networkInterceptor');
  */
  module.exports.headLessBrowser = async (uname, pass) => {
     const browser = await puppeteer.launch({
-        headless: false,
-        slowMo: 70, // slow down by 250ms
+        headless: false,   // remove this to not launch Chrommium
+        slowMo: 35, // slow down by 250ms
     });
 
     const page = await browser.newPage();

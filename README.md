@@ -15,4 +15,4 @@ for now the headless property of pupeteer driven chromium browser has been kept 
 
 #
 
-for now i have read everything that needs to be done and know to implement it. If you would like to know how, as the assignment is not completed, we can definitely sync up. 
+It is up and running now !!!!

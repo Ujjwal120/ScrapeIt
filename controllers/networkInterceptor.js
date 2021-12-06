@@ -1,6 +1,8 @@
+
 /**
  * @param  {Page} page
- * @param  {Array} activeStoriesUserInfo
+ * @param  {} unseenStoriesData
+ * @param  {} MonitorRequests
  */
 module.exports.networkInterceptor = async(page, unseenStoriesData, MonitorRequests) => {
 

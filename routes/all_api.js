@@ -15,6 +15,9 @@ router.post("/startPupeteer", async (req, res, next) => {
     ] = await Browser
         .headLessBrowser(req.body.username, req.body.password);
     
+    const client = new MongoClient(uri, { useUnifiedTopology: true });
+    
+    
     if(!MonitorRequests.loginSuccess) {
         // close the browser
         await browser.close();
@@ -26,6 +29,9 @@ router.post("/startPupeteer", async (req, res, next) => {
 
     await MonitorRequests.waitForAllRequests();
 
+    await page.waitForSelector('.QBdPU', {visible : true});
+    await page.waitForSelector('.coreSpriteRightChevron', {visible : true});
+
     let cancelButton = await page.evaluate(() => {
         return document.querySelector('.QBdPU');
     })
@@ -35,7 +41,8 @@ router.post("/startPupeteer", async (req, res, next) => {
     });
 
     while(RightButtonPresent !== null && cancelButton !== null) {
-        
+        // console.log("in");
+
         await page.waitForSelector('.QBdPU', {visible : true});
         await page.waitForSelector('.coreSpriteRightChevron', {visible : true});
 
@@ -54,8 +61,6 @@ router.post("/startPupeteer", async (req, res, next) => {
     }
 
     await MonitorRequests.waitForAllRequests();
-
-    const client = new MongoClient(uri, { useUnifiedTopology: true });
 
     try {
         await client.connect();
